@@ -35,5 +35,6 @@ chown -R www-data:www-data storage bootstrap/cache
 chmod -R ug+rw storage bootstrap/cache
 
 php artisan migrate --force
+php artisan storage:link --force
 
 exec "$@"
