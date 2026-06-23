@@ -13,9 +13,6 @@ RUN apt-get update \
         zip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" gd mbstring pdo_mysql pdo_pgsql zip \
-    && a2dismod mpm_event mpm_worker || true \
-    && a2enmod mpm_prefork \
-    && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -46,8 +43,13 @@ COPY docker/entrypoint.sh /usr/local/bin/railway-entrypoint
 RUN sed -i 's/\r$//' /usr/local/bin/railway-entrypoint \
     && chmod +x /usr/local/bin/railway-entrypoint
 
-# Force correct MPM after all files are copied
-RUN a2dismod mpm_event mpm_worker mpm_prefork || true \
+# Force correct MPM - remove all then enable only prefork
+RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
+    && rm -f /etc/apache2/mods-enabled/mpm_event.conf \
+    && rm -f /etc/apache2/mods-enabled/mpm_worker.load \
+    && rm -f /etc/apache2/mods-enabled/mpm_worker.conf \
+    && rm -f /etc/apache2/mods-enabled/mpm_prefork.load \
+    && rm -f /etc/apache2/mods-enabled/mpm_prefork.conf \
     && a2enmod mpm_prefork \
     && a2enmod rewrite
 
